@@ -47,6 +47,7 @@ const (
 	TRACK_ACTIVITY = "activity"
 	TRACK_LICENSE  = "license"
 	TRACK_SERVER   = "server"
+	TRACK_PLUGINS  = "plugins"
 )
 
 var client *analytics.Client
@@ -57,6 +58,7 @@ func (a *App) SendDailyDiagnostics() {
 		a.trackActivity()
 		trackConfig()
 		trackLicense()
+		a.trackPlugins()
 		a.trackServer()
 	}
 }
@@ -447,7 +449,9 @@ func trackConfig() {
 	})
 
 	SendDiagnostic(TRACK_CONFIG_PLUGIN, map[string]interface{}{
-		"enable_jira": pluginSetting("jira", "enabled", false),
+		"enable_jira":    pluginSetting("jira", "enabled", false),
+		"enable":         *utils.Cfg.PluginSettings.Enable,
+		"enable_uploads": *utils.Cfg.PluginSettings.EnableUploads,
 	})
 
 	SendDiagnostic(TRACK_CONFIG_DATA_RETENTION, map[string]interface{}{
@@ -476,6 +480,36 @@ func trackLicense() {
 		}
 
 		SendDiagnostic(TRACK_LICENSE, data)
+	}
+}
+
+func (a *App) trackPlugins() {
+	if *a.Config().PluginSettings.Enable {
+		totalCount := 0
+		webappCount := 0
+		backendCount := 0
+
+		plugins, _ := a.GetActivePluginManifests()
+
+		if plugins != nil {
+			totalCount = len(plugins)
+
+			for _, plugin := range plugins {
+				if plugin.Webapp != nil {
+					webappCount += 1
+				}
+
+				if plugin.Backend != nil {
+					backendCount += 1
+				}
+			}
+		}
+
+		SendDiagnostic(TRACK_PLUGINS, map[string]interface{}{
+			"active_plugins":         totalCount,
+			"active_webapp_plugins":  webappCount,
+			"active_backend_plugins": backendCount,
+		})
 	}
 }
 
