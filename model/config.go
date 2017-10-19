@@ -505,8 +505,9 @@ type JobSettings struct {
 }
 
 type PluginSettings struct {
-	Enable  *bool
-	Plugins map[string]interface{}
+	Enable        *bool
+	EnableUploads *bool
+	Plugins       map[string]interface{}
 }
 
 type Config struct {
@@ -1628,7 +1629,12 @@ func (o *Config) SetDefaults() {
 
 	if o.PluginSettings.Enable == nil {
 		o.PluginSettings.Enable = new(bool)
-		*o.PluginSettings.Enable = false
+		*o.PluginSettings.Enable = true
+	}
+
+	if o.PluginSettings.EnableUploads == nil {
+		o.PluginSettings.EnableUploads = new(bool)
+		*o.PluginSettings.EnableUploads = false
 	}
 
 	if o.PluginSettings.Plugins == nil {
